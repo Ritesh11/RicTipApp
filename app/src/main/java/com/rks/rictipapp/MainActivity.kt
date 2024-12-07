@@ -149,6 +149,10 @@ fun TipCalculator(modifier: Modifier = Modifier,
         mutableStateOf(0.0)
     }
 
+    var tipPercent by remember {
+        mutableStateOf(0f)
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Surface(
@@ -178,12 +182,15 @@ fun TipCalculator(modifier: Modifier = Modifier,
             if (validState) {
                 SplitContainer(modifier) { onPersonUpdate ->
                     numberOfPerson = onPersonUpdate
-                    updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
+                    var splitAmount = totalBillState.value.trim().toInt() / numberOfPerson;
+                    tipAmount = "%.2f".format((splitAmount * tipPercent) / 100).toDouble()
+                    updatedAmount = (splitAmount) + tipAmount
                     billAmountUpdated(updatedAmount)
                 }
 
-                TipContainer(modifier, totalBillState.value.trim().toDouble()) { onTipAdded ->
-                    tipAmount = onTipAdded
+                TipContainer(modifier, tipAmount) { percent ->
+                    tipPercent = percent
+                    tipAmount = "%.2f".format((updatedAmount * percent) / 100).toDouble()
                     updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
                     billAmountUpdated(updatedAmount)
 
@@ -256,17 +263,14 @@ fun SplitContainer(
 @Composable
 fun TipContainer(
     modifier: Modifier = Modifier,
-    amount: Double,
-    onTipAdded: (Double) -> Unit
+    amt: Double,
+    tipPresent: (Float) -> Unit
 ) {
 
     var tipPercent by remember {
         mutableStateOf(0f)
     }
 
-    var tipAmount by remember {
-        mutableStateOf(0f)
-    }
 
 
     Column(
@@ -287,7 +291,7 @@ fun TipContainer(
 
 
             Text(
-                text = "$${tipAmount}",
+                text = "$${amt}",
                 modifier = modifier
                     .weight(1f)
             )
@@ -314,8 +318,7 @@ fun TipContainer(
                 steps = 8,
                 modifier = Modifier.fillMaxWidth(),
                 onValueChangeFinished = {
-                    tipAmount = "%.2f".format((amount * tipPercent) / 100).toFloat()
-                    onTipAdded(tipAmount.toDouble())
+                    tipPresent(tipPercent)
                 }
             )
 
