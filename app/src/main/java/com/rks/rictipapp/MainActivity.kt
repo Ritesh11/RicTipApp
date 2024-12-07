@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rks.rictipapp.ui.components.BillAmountComponent
@@ -183,7 +182,7 @@ fun TipCalculator(modifier: Modifier = Modifier,
                     billAmountUpdated(updatedAmount)
                 }
 
-                TipContainer(modifier, updatedAmount) { onTipAdded ->
+                TipContainer(modifier, totalBillState.value.trim().toDouble()) { onTipAdded ->
                     tipAmount = onTipAdded
                     updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
                     billAmountUpdated(updatedAmount)
@@ -265,7 +264,7 @@ fun TipContainer(
         mutableStateOf(0f)
     }
 
-    var  tipAmount by remember {
+    var tipAmount by remember {
         mutableStateOf(0f)
     }
 
@@ -302,7 +301,7 @@ fun TipContainer(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text(text = "$tipPercent.toInt()%")
+            Text(text = "${tipPercent.toInt()}%")
 
             Spacer(modifier = modifier.height(16.dp))
 
