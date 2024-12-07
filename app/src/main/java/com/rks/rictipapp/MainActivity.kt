@@ -19,12 +19,12 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -127,8 +127,7 @@ fun SplitAmountContainer(
 
 
 @Composable
-fun TipCalculator(
-    modifier: Modifier = Modifier,
+fun TipCalculator(modifier: Modifier = Modifier,
     billAmountUpdated: (Double) -> Unit
 ) {
     val totalBillState = remember {
@@ -139,12 +138,23 @@ fun TipCalculator(
         totalBillState.value.trim().isNotEmpty()
     }
 
+    var updatedAmount by remember {
+        mutableDoubleStateOf(0.00)
+    }
+
+    var numberOfPerson by remember {
+        mutableStateOf(1)
+    }
+
+    var tipAmount by remember {
+        mutableStateOf(0.0)
+    }
+
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Surface(
         modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, color = Color.Gray),
         color = Color.White
@@ -160,20 +170,31 @@ fun TipCalculator(
                 isSingleLined = true,
                 onAction = KeyboardActions {
                     if (!validState) return@KeyboardActions
-                    billAmountUpdated(totalBillState.value.trim().toDouble())
+                    updatedAmount = totalBillState.value.trim().toDouble()
+                    billAmountUpdated(updatedAmount)
                     keyboardController?.hide()
                 }
             )
 
             if (validState) {
-                SplitContainer() { onPersonUpdate ->
-                    val newAmount = totalBillState.value.trim().toDouble()/onPersonUpdate
-                    billAmountUpdated(newAmount)
+                SplitContainer(modifier) { onPersonUpdate ->
+                    numberOfPerson = onPersonUpdate
+                    updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
+                    billAmountUpdated(updatedAmount)
+                }
+
+                TipContainer(modifier, updatedAmount) { onTipAdded ->
+                    tipAmount = onTipAdded
+                    updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
+                    billAmountUpdated(updatedAmount)
+
                 }
             }
+
         }
 
     }
+
 }
 
 @Composable
@@ -201,10 +222,11 @@ fun SplitContainer(
                 .weight(1f),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RoundIconButton(modifier = modifier,
+            RoundIconButton(
+                modifier = modifier,
                 imageVector = Icons.Rounded.Remove,
                 onClick = {
-                    if(numberOfPerson>1) {
+                    if (numberOfPerson > 1) {
                         numberOfPerson -= 1
                         onPersonUpdate(numberOfPerson)
                     }
@@ -217,7 +239,8 @@ fun SplitContainer(
 
             Spacer(modifier = modifier.width(10.dp))
 
-            RoundIconButton(modifier = modifier,
+            RoundIconButton(
+                modifier = modifier,
                 imageVector = Icons.Rounded.Add,
                 onClick = {
                     numberOfPerson += 1
@@ -231,32 +254,73 @@ fun SplitContainer(
 
 }
 
-@Preview
 @Composable
-fun TipContainer(modifier: Modifier = Modifier){
+fun TipContainer(
+    modifier: Modifier = Modifier,
+    amount: Double,
+    onTipAdded: (Double) -> Unit
+) {
 
-var tipAmount by remember {
-    mutableDoubleStateOf(25.00)
-}
+    var tipPercent by remember {
+        mutableStateOf(0f)
+    }
 
-    Column(modifier = modifier
-        .fillMaxWidth()) {
+    var  tipAmount by remember {
+        mutableStateOf(0f)
+    }
 
-        Row(modifier = modifier
-            .fillMaxWidth()) {
 
-            Text(text = "Tip",
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+        ) {
+
+            Text(
+                text = "Tip",
                 modifier = modifier
-                    .weight(1f))
+                    .weight(1f)
+            )
 
-            val amount = "%.2f".format(tipAmount)
 
-            Text(text = "$${amount}",
+            Text(
+                text = "$${tipAmount}",
                 modifier = modifier
-                    .weight(1f))
+                    .weight(1f)
+            )
 
         }
 
+        Spacer(modifier = modifier.height(16.dp))
+
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text(text = "$tipPercent.toInt()%")
+
+            Spacer(modifier = modifier.height(16.dp))
+
+            Slider(
+                value = tipPercent,
+                onValueChange = {
+                    tipPercent = it
+                    },
+                valueRange = 0f..100f,
+                steps = 8,
+                modifier = Modifier.fillMaxWidth(),
+                onValueChangeFinished = {
+                    tipAmount = "%.2f".format((amount * tipPercent) / 100).toFloat()
+                    onTipAdded(tipAmount.toDouble())
+                }
+            )
+
+        }
 
 
     }
