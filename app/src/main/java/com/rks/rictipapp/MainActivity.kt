@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,7 +71,7 @@ fun Content(modifier: Modifier = Modifier) {
         ) {
             SplitAmountContainer(splitAmount)
             Spacer(modifier = Modifier.height(10.dp))
-            TipCalculator(splitAmount) { billAmt ->
+            TipCalculator() { billAmt ->
                 splitAmount = billAmt
                 Log.d(MainActivity::class.java.name, "Content: $billAmt")
             }
@@ -127,7 +128,6 @@ fun SplitAmountContainer(
 
 @Composable
 fun TipCalculator(
-    splitAmount: Double,
     modifier: Modifier = Modifier,
     billAmountUpdated: (Double) -> Unit
 ) {
@@ -226,6 +226,38 @@ fun SplitContainer(
             )
 
         }
+
+    }
+
+}
+
+@Preview
+@Composable
+fun TipContainer(modifier: Modifier = Modifier){
+
+var tipAmount by remember {
+    mutableDoubleStateOf(25.00)
+}
+
+    Column(modifier = modifier
+        .fillMaxWidth()) {
+
+        Row(modifier = modifier
+            .fillMaxWidth()) {
+
+            Text(text = "Tip",
+                modifier = modifier
+                    .weight(1f))
+
+            val amount = "%.2f".format(tipAmount)
+
+            Text(text = "$${amount}",
+                modifier = modifier
+                    .weight(1f))
+
+        }
+
+
 
     }
 

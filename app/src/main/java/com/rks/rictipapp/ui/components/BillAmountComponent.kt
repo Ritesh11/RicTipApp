@@ -57,6 +57,5 @@ fun BillAmountComponent(
         keyboardActions = onAction,
         modifier = modifier
             .fillMaxWidth()
-            .padding(10.dp)
     )
 }
