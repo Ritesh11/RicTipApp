@@ -23,6 +23,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,15 @@ fun Content(modifier: Modifier = Modifier) {
     var splitAmount by remember {
         mutableDoubleStateOf(100.00)
     }
+
+    var numberOfPerson = remember {
+        mutableStateOf(1)
+    }
+
+    var tipAmount = remember {
+        mutableStateOf(0.0)
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -70,7 +80,7 @@ fun Content(modifier: Modifier = Modifier) {
         ) {
             SplitAmountContainer(splitAmount)
             Spacer(modifier = Modifier.height(10.dp))
-            TipCalculator() { billAmt ->
+            TipCalculator(modifier, numberOfPerson, tipAmount) { billAmt ->
                 splitAmount = billAmt
                 Log.d(MainActivity::class.java.name, "Content: $billAmt")
             }
@@ -127,6 +137,8 @@ fun SplitAmountContainer(
 
 @Composable
 fun TipCalculator(modifier: Modifier = Modifier,
+                  numberOfPerson: MutableState<Int>,
+                  tipAmount: MutableState<Double>,
     billAmountUpdated: (Double) -> Unit
 ) {
     val totalBillState = remember {
@@ -141,13 +153,7 @@ fun TipCalculator(modifier: Modifier = Modifier,
         mutableDoubleStateOf(0.00)
     }
 
-    var numberOfPerson by remember {
-        mutableStateOf(1)
-    }
 
-    var tipAmount by remember {
-        mutableStateOf(0.0)
-    }
 
     var tipPercent by remember {
         mutableStateOf(0f)
@@ -181,17 +187,17 @@ fun TipCalculator(modifier: Modifier = Modifier,
 
             if (validState) {
                 SplitContainer(modifier) { onPersonUpdate ->
-                    numberOfPerson = onPersonUpdate
-                    var splitAmount = totalBillState.value.trim().toInt() / numberOfPerson;
-                    tipAmount = "%.2f".format((splitAmount * tipPercent) / 100).toDouble()
-                    updatedAmount = (splitAmount) + tipAmount
+                    numberOfPerson.value = onPersonUpdate
+                    var splitAmount = (totalBillState.value.trim().toInt().div(numberOfPerson.value));
+                    tipAmount.value = "%.2f".format((splitAmount * tipPercent) / 100).toDouble()
+                    updatedAmount = (splitAmount) + tipAmount.value
                     billAmountUpdated(updatedAmount)
                 }
 
-                TipContainer(modifier, tipAmount) { percent ->
+                TipContainer(modifier, tipAmount.value) { percent ->
                     tipPercent = percent
-                    tipAmount = "%.2f".format((updatedAmount * percent) / 100).toDouble()
-                    updatedAmount = (totalBillState.value.trim().toInt() / numberOfPerson) + tipAmount
+                    tipAmount.value = "%.2f".format((updatedAmount * percent) / 100).toDouble()
+                    updatedAmount = (totalBillState.value.trim().toInt().div(numberOfPerson.value)) + tipAmount.value
                     billAmountUpdated(updatedAmount)
 
                 }
